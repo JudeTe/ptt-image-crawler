@@ -1,67 +1,69 @@
-from bs4 import BeautifulSoup
-import requests
-import random
-from urllib.request import urlopen , urlretrieve
 import os
-Pages = random.randint(1500,2600)
-Jude = int(input("請輸入想要的頁數："))
-Route = input("請輸入想放的路徑，如按Enter則預設為C槽")
-Name = input("這邊可以指定您想要放入的資料夾名稱，如按Enter則預設為'Dbeauty'，如已有同名稱之資料夾，圖片會被覆蓋喔！")
-Types = input("請輸入想抓的看板：")
-if Name == "" :
-    Name = "Dbeauty"
-for op in range(Pages,Pages+Jude):
-    response = requests.get("https://www.ptt.cc/bbs/"+Types+"/index"+str(op)+".html")
-    html = BeautifulSoup(response.text)        #以上三行為抓取文章的網址
-    b = []
-    B2 = []
-    # with open("Beauty.txt","w",encoding="utf-8") as file:
-    page = 0
-    # while page < 1:
+import sys
+import random
+import requests
+from bs4 import BeautifulSoup
+from urllib.request import urlopen , urlretrieve
 
-    for x in html.find_all("div",class_="title") :
-        print(x)
-        print("====="*10000)
+
+"""待補: 
+1. Threading
+2. sys path且支援不同OS
+
+"""
+
+
+base_page = 0
+board = input("請輸入想抓的看板：")
+pages = input("請輸入想要的頁數：")
+path = input("請輸入想放的路徑，如按Enter則預設為當前資料夾")
+directory_name = input("這邊可以指定您想要放入的資料夾名稱，如未指定則預設為看板名稱，如已有同名稱之資料夾，圖片會被覆蓋")
+
+if not board:
+    board = 'beauty'
+if not directory_name:
+    directory_name = board
+if path == "":
+    # dir = f"C:/{directory_name}/"
+    dir = f"./{directory_name}/"
+else :
+    dir = f"{path}/{directory_name}/"
+if not os.path.exists(dir):
+    os.mkdir(dir)
+try:
+    pages = int(pages)
+except:
+    pages = 1
+
+BOARD_PREFIX = f"https://www.ptt.cc/bbs/{board}"
+for page in range(base_page, base_page + pages):
+    articles = []
+    url = f"https://www.ptt.cc/bbs/{board}/index{page}.html"
+    response = requests.get(url, headers = {"cookie": "over18=1"})
+    soup = BeautifulSoup(response.text, "html.parser")
+    for title in soup.find_all("div", class_="title"):
         try:
-            title = x.find("a")["href"]
-            print(title)
-            print("=====" * 10000)
+            link_suffix = title.find("a")["href"].split('/')[-1]
         except:
             continue
-        b.append(title)
-        # page += 1
-    print("-----")
-    print(b)
-    c = []
-    page2 = 0
-
-    while page2 < 1:
-        src = "https://www.ptt.cc"+str(b[page2])
-        page2+=1
-        response = requests.get(src)
-        html = BeautifulSoup(response.text)
-        # print(html)
-        for d in html.find_all("div",class_="richcontent"):
+        articles.append(link_suffix)
+    for article_suffix in articles:
+        article_url = f"{BOARD_PREFIX}/{article_suffix}"
+        response = requests.get(article_url, headers={"cookie": "over18=1"})
+        soup = BeautifulSoup(response.text, "html.parser")
+        for img_html in soup.find_all("a"):
+            link = img_html.text
+            if not link.endswith('.jpg') and not link.endswith('.png'):
+                continue
             try:
-                img = d.find("a",)["href"]
-                # print(img)
-                if Route == "" :
-                    dir = "C:/"+Name+"/"
-                else :
-                    dir = str(Route)+"/"+Name+"/"
-
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                # else :
-                #     dir2 = dir+"1/"
-                #     os.mkdir(dir2)
-                a = dir+"/"+img.split("/")[-1]+".jpg"
-                c = img.split("/")[-2]+"/"+img.split("/")[-1]
-                c2 = "https://"+c+".jpg"
-                print(c2)
-                # urlretrieve(c2,a) 是否只能放文字檔？
-                with open(a, "wb") as files:
-                    files.write(requests.get(c2).content)
+                img = requests.get(link, headers = {"cookie": "over18=1"}).content
+                img_name = link.split('/')[-1]
+                img_path = f"{dir}/{img_name}"
+                with open(img_path, "wb") as files:
+                    files.write(img)
             except:
                 continue
-print(Pages)
+
+
+
+
