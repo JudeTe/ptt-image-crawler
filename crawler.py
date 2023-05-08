@@ -1,6 +1,11 @@
+"""To be added: 
+1. Multi-Process
+2. Scrapy progress bar
+
+"""
+
+
 import os
-import sys
-import gc
 import time
 import queue
 import threading
@@ -11,16 +16,11 @@ import requests
 from bs4 import BeautifulSoup
 
 
-"""To be added: 
-1. Multi-Process
-2. Scrapy progress bar
-
-"""
 numbers_of_core = os.cpu_count()
 parser = argparse.ArgumentParser(description='Ptt Crawler')
 parser.add_argument('--board', type=str, default='beauty', help='board name')
 parser.add_argument('--pages', type=int, default=1, help='number of pages')
-parser.add_argument('--path', type=str, default=f'', help='path to save')
+parser.add_argument('--path', type=str, default='', help='path to save')
 parser.add_argument('--dir', type=str, default='', help='directory name')
 parser.add_argument('--thread', type=int, default=0, help='number of threads')
 parser.add_argument('--process', type=int, default=0, help='number of process')
@@ -37,49 +37,48 @@ if not thread_num and not process_num:
 elif thread_num and process_num:
     thread_num = None
     process_num = numbers_of_core
-dir = f"{path}/{directory_name}/"
-if not os.path.exists(dir):
-    os.mkdir(dir)
+directory_path = f"{path}/{directory_name}/"
+if not os.path.exists(directory_path):
+    os.mkdir(directory_path)
 BASEPAGE = 0
 BOARD_PREFIX = f"https://www.ptt.cc/bbs/{board}"
 
 def article_crawler() -> queue:
     """Scrape articles from given pages"""
-    crawler_queue = queue.Queue()
+    link_queue = queue.Queue()
     for page in range(BASEPAGE, BASEPAGE + pages):
         url = f"https://www.ptt.cc/bbs/{board}/index{page}.html"
-        response = requests.get(url, headers = {"cookie": "over18=1"})
+        response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
         for title in soup.find_all("div", class_="title"):
-            try:
-                link_suffix = title.find("a")["href"].split('/')[-1]
-            except:
-                continue
-            crawler_queue.put(link_suffix)
-    return crawler_queue
+            link_suffix = title.find("a")["href"].split('/')[-1]
+            if link_suffix:
+                link_queue.put(link_suffix)
+    return link_queue
 
 def img_crawler(article_suffix: str) -> None:
     """Scrape img from given article"""
     article_url = f"{BOARD_PREFIX}/{article_suffix}"
-    response = requests.get(article_url, headers={"cookie": "over18=1"})
+    response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
     soup = BeautifulSoup(response.text, "html.parser")
     for img_html in soup.find_all("a"):
         link = img_html.text
         if not link.endswith('.jpg') and not link.endswith('.png'):
             continue
         try:
-            img = requests.get(link, headers = {"cookie": "over18=1"}).content
+            img = requests.get(link, headers = {"cookie": "over18=1"}, timeout=30).content
             img_name = link.split('/')[-1]
-            img_path = f"{dir}/{img_name}"
+            img_path = f"{directory_path}/{img_name}"
             with open(img_path, "wb") as files:
                 files.write(img)
-        except:
+        except Exception as err_:
+            print(f"Error: {err_}")
             continue
 
-def crawler_thread(crawler_queue: queue) -> None:
+def crawler_thread(queue: queue) -> None:
     """Non blocking get queue"""
-    while crawler_queue.qsize() > 0:
-        url = crawler_queue.get_nowait()
+    while queue.qsize() > 0:
+        url = queue.get_nowait()
         img_crawler(url)
 
 class Worker(threading.Thread):
@@ -133,4 +132,7 @@ if __name__ == "__main__":
     end_time = time.time()
     print(f"Time takes: {end_time - start_time} seconds.")
     print("Done.")
+
+
+
 
