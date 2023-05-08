@@ -77,6 +77,10 @@ def img_crawler(article_suffix: str) -> None:
         except:
             continue
 
+def crawler_thread(func):
+    """Non blocking get queue"""
+    while crawler_queue.qsize() > 0:
+        crawler_queue.get_nowait()
 
 class Worker(threading.Thread):
     """Worker for scraping"""
@@ -98,16 +102,20 @@ if __name__ == "__main__":
     for article in articles:
         crawler_queue.put(img_crawler(article))
 
-    for i in range(thread_num):
-        globals() [f'worker_{i}'] = Worker(crawler_queue, i)
+    threads = []
+    thread_num = 1
+    # for i in range(thread_num):
+    #     threads.append(Worker(crawler_queue, i))
+        # globals() [f'worker_{i}'] = Worker(crawler_queue, i)
         # my_worker1 = Worker(crawler_queue, 1)
-    # start_time = time.time()
-    for obj in gc.get_objects():
-        if isinstance(obj, Worker):
-            obj.start()
-    for obj in gc.get_objects():
-        if isinstance(obj, Worker):
-            obj.join()
+    for i in range(thread_num):
+        t = threading.Thread(target=crawler_thread, args=(None, ))
+        threads.append(t)
+
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
     end_time = time.time()
     print(f"Time takes: {end_time - start_time} seconds.")
     print("Done.")
