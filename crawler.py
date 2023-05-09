@@ -19,11 +19,11 @@ from bs4 import BeautifulSoup
 
 numbers_of_core = os.cpu_count()
 parser = argparse.ArgumentParser(description='Ptt Crawler')
-parser.add_argument('--board', type=str, default='beauty', help='board name')
+parser.add_argument('--board', '-b', type=str, default='beauty', help='board name')
 parser.add_argument('--pages', type=int, default=1, help='number of pages')
 parser.add_argument('--path', type=str, default='', help='path to save')
-parser.add_argument('--dir', type=str, default='', help='directory name')
-parser.add_argument('--thread', type=int, default=0, help='number of threads')
+parser.add_argument('--dir', '-d', type=str, default='', help='directory name')
+parser.add_argument('--thread', '-t', type=int, default=0, help='number of threads')
 parser.add_argument('--process', type=int, default=0, help='number of process')
 args = parser.parse_args()
 board = args.board
@@ -52,9 +52,13 @@ def article_crawler(q: queue) -> None:
         response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
         for title in soup.find_all("div", class_="title"):
-            link_suffix = title.find("a")["href"].split('/')[-1]
-            if link_suffix:
-                q.put(link_suffix)
+            try:
+                link_suffix = title.find("a")["href"].split('/')[-1]
+                if link_suffix:
+                    q.put(link_suffix)
+            except Exception as err_:
+                print(f"Error: {err_}")
+                continue
 
 def img_crawler(article_suffix: str) -> None:
     """Scrape img from given article"""
