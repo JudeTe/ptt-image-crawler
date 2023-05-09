@@ -1,7 +1,7 @@
 """To be added: 
 1. Multi-Process
 2. Scrapy progress bar
-
+3. All URLS in same queue
 """
 
 
@@ -11,6 +11,7 @@ import queue
 import threading
 import multiprocessing
 from multiprocessing import Process, Pool
+from multiprocessing import Queue as MQ
 import argparse
 import requests
 from bs4 import BeautifulSoup
@@ -41,11 +42,11 @@ directory_path = f"{path}/{directory_name}/"
 if not os.path.exists(directory_path):
     os.mkdir(directory_path)
 BASEPAGE = 0
+download_count = 0
 BOARD_PREFIX = f"https://www.ptt.cc/bbs/{board}"
 
-def article_crawler() -> queue:
+def article_crawler(q: queue) -> None:
     """Scrape articles from given pages"""
-    link_queue = queue.Queue()
     for page in range(BASEPAGE, BASEPAGE + pages):
         url = f"https://www.ptt.cc/bbs/{board}/index{page}.html"
         response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
@@ -53,8 +54,7 @@ def article_crawler() -> queue:
         for title in soup.find_all("div", class_="title"):
             link_suffix = title.find("a")["href"].split('/')[-1]
             if link_suffix:
-                link_queue.put(link_suffix)
-    return link_queue
+                q.put(link_suffix)
 
 def img_crawler(article_suffix: str) -> None:
     """Scrape img from given article"""
@@ -71,6 +71,8 @@ def img_crawler(article_suffix: str) -> None:
             img_path = f"{directory_path}/{img_name}"
             with open(img_path, "wb") as files:
                 files.write(img)
+                global download_count
+                download_count += 1
         except Exception as err_:
             print(f"Error: {err_}")
             continue
@@ -97,41 +99,39 @@ class Worker(threading.Thread):
 
 if __name__ == "__main__":
     start_time = time.time()
-    crawler_queue = article_crawler()
+    crawler_queue = multiprocessing.Queue()
+    article_crawler(crawler_queue)
     print(f"Total articles: {crawler_queue.qsize()}")
-    if thread_num:
-        threads = []
-        for i in range(thread_num):
-            threads.append(Worker(crawler_queue, i))
-            # t = threading.Thread(target=crawler_thread, args=(crawler_queue, ))
-            # threads.append(t)
-        for t in threads:
+    workers = []
+    worker_nums = thread_num if thread_num else process_num
+    for i in range(worker_nums):
+        if thread_num:
+            t = Worker(crawler_queue, i)
             t.start()
-        for t in threads:
-            t.join()
-    elif process_num:
-        processes = []
-        for i in range(process_num):
+            workers.append(t)
+            # t = threading.Thread(target=crawler_thread, args=(crawler_queue, ))
+            # workers.append(t)
+        elif process_num:
             p = Process(target=crawler_thread, args=(crawler_queue, ))
-            processes.append(p)
-        for p in processes:
             p.start()
-        for p in processes:
-            p.join()
+            workers.append(p)
+    for worker in workers:
+        worker.join()
 
-        # pool = Pool(process_num)
-        # pool_outputs = pool.map(crawler_thread, (crawler_queue, ))
-        # print("將會阻塞並於 pool.map 子程序結束後觸發")
-
-        # pool_outputs = pool.map_async(crawler_thread, (crawler_queue, ))
-        # print('將不會阻塞並和 pool.map_async 並行觸發')
-        # # close 和 join 是確保主程序結束後，子程序仍然繼續進行
-        # pool.close()
-        # pool.join()
+    # pool = Pool(worker_nums)
+    # pool_outputs = pool.map(crawler_thread, (crawler_queue, ))
+    # print("將會阻塞並於 pool.map 子程序結束後觸發")
+    # pool_outputs = pool.map_async(crawler_thread, (crawler_queue, ))
+    # print('將不會阻塞並和 pool.map_async 並行觸發')
+    # # close 和 join 是確保主程序結束後，子程序仍然繼續進行
+    # pool.close()
+    # pool.join()
 
     end_time = time.time()
     print(f"Time takes: {end_time - start_time} seconds.")
-    print("Done.")
+    # print files count in directory
+    print(f"Download {download_count} files")
+    # print("Done.")
 
 
 
