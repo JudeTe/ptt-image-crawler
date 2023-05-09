@@ -1,7 +1,6 @@
-"""To be added: 
-1. Multi-Process
-2. Scrapy progress bar
-3. All URLS in same queue
+"""TODO: 
+1. Scrapy progress bar
+2. All URLS in same queue
 """
 
 
@@ -19,12 +18,22 @@ from bs4 import BeautifulSoup
 
 numbers_of_core = os.cpu_count()
 parser = argparse.ArgumentParser(description='Ptt Crawler')
-parser.add_argument('--board', '-b', type=str, default='beauty', help='board name')
-parser.add_argument('--pages', type=int, default=1, help='number of pages')
-parser.add_argument('--path', type=str, default='', help='path to save')
-parser.add_argument('--dir', '-d', type=str, default='', help='directory name')
-parser.add_argument('--thread', '-t', type=int, default=0, help='number of threads')
-parser.add_argument('--process', type=int, default=0, help='number of process')
+parser.add_argument('--board', '-b', type=str, default='beauty', 
+                    help='specify the board you want to download (default: "beauty")')
+parser.add_argument('--pages', type=int, default=1, 
+                    help='specify how many pages you want to download in the given board \
+                    (default: 1)')
+parser.add_argument('--path', type=str, default='', 
+                    help='specify the path for storing the file (default: "./")')
+parser.add_argument('--dir', '-d', type=str, default='', 
+                    help='specify the directory name for storing the file \
+                    (default: "{board name}")')
+parser.add_argument('--thread', '-t', type=int, default=0, 
+                    help='specify how many threads to use for running the program. \
+                    (default: 0)')
+parser.add_argument('--process', type=int, default=0,
+                    help='specify how many processes to use for running the program. \
+                    (default: 0)')
 args = parser.parse_args()
 board = args.board
 pages = args.pages
@@ -113,8 +122,6 @@ if __name__ == "__main__":
             t = Worker(crawler_queue, i)
             t.start()
             workers.append(t)
-            # t = threading.Thread(target=crawler_thread, args=(crawler_queue, ))
-            # workers.append(t)
         elif process_num:
             p = Process(target=crawler_thread, args=(crawler_queue, ))
             p.start()
@@ -127,15 +134,12 @@ if __name__ == "__main__":
     # print("將會阻塞並於 pool.map 子程序結束後觸發")
     # pool_outputs = pool.map_async(crawler_thread, (crawler_queue, ))
     # print('將不會阻塞並和 pool.map_async 並行觸發')
-    # # close 和 join 是確保主程序結束後，子程序仍然繼續進行
     # pool.close()
     # pool.join()
 
     end_time = time.time()
     print(f"Time takes: {end_time - start_time} seconds.")
-    # print files count in directory
     print(f"Download {download_count} files")
-    # print("Done.")
 
 
 
