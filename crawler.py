@@ -138,9 +138,9 @@ if __name__ == "__main__":
 
     # pool = Pool(worker_nums)
     # pool_outputs = pool.map(crawler_thread, (crawler_queue, ))
-    # print("將會阻塞並於 pool.map 子程序結束後觸發")
+
+    # pool = Pool(worker_nums)
     # pool_outputs = pool.map_async(crawler_thread, (crawler_queue, ))
-    # print('將不會阻塞並和 pool.map_async 並行觸發')
     # pool.close()
     # pool.join()
 
