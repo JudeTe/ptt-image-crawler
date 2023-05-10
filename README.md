@@ -21,7 +21,7 @@ crawler.py [-h] [-b nba] [--pages 10] [--path C://] [--dir nba] [-t 10] [-p 4]
 
 optional arguments:
 *  -h, --help            show the help message and exit  
-*  -b nba, --board nba  specify the board you want to download (default: 'beauty')  
+*  -b **nba**, --board nba  specify the board you want to download (default: 'beauty')  
 *  --pages 10  specify how many pages you want to download in the given board (default: 1)  
 *  --path C://  specify the path for storing the file (default: './')  
 *  --dir nba specify the directory name for storing the file (default: '{board name}')  
