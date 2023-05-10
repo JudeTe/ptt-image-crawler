@@ -1,6 +1,13 @@
-"""TODO: 
-1. Scrapy progress bar
-2. All URLS in same queue
+# Encoding: utf-8
+# Author: Jude
+# Repo: https://github.com/JudeTe/PttCrawler
+# Date: 2023-05-10
+# Python version: 3.9
+
+
+"""Crawl any board from PTT and download all images from the articles.
+Usage: python crawler.py -b <board name> -p <pages> -d <directory name> -t <threads> -p <processes>
+Example: python crawler.py -b beauty -p 1 -d beauty -t 4 -p 4
 """
 
 
