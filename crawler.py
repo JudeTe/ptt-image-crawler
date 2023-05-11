@@ -1,6 +1,6 @@
 # Encoding: utf-8
-# Author: Jude
-# Repo: https://github.com/JudeTe/PttCrawler
+# Author: JudeTe
+# Repo: https://github.com/JudeTe/PttImageCrawler
 # Date: 2023-05-10
 # Python version: 3.9
 
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
     end_time = time.time()
     print(f"Time takes: {end_time - start_time} seconds.")
-    print(f"Download {download_count} files")
+    print(f"Download {download_count} files.")
 
 
 
