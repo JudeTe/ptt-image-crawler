@@ -22,7 +22,7 @@ crawler.py [-h] [--board nba] [-i 50 100] [--path C://] [--dir nba] [--thread 10
 optional arguments:
 *  -h, --help            show the help message and exit  
 *  -b `nba`, --board `nba`  specify the board you want to download (default: 'beauty')  
-*  -i `50 100`  specify start and end page you want to download in the given board (default: 0 ~ 1)  
+*  -i `50 100`  specify start and end page you want to download in the given board (default: 0 to 1)  
 *  -p `C://`, --path `C://`  specify the path for storing the file (default: './')  
 *  -d `nba` --dir `nba` specify the directory name for storing the file (default: '{board name}')  
 *  -t `8`, --thread `8` specify how many threads to use for running the program. (default: numbers of your core)  
