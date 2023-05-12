@@ -1,4 +1,4 @@
-# Encoding: utf-8
+# -*- coding: utf-8 -*-
 # Author: JudeTe
 # Repo: https://github.com/JudeTe/PttImageCrawler
 # Date: 2023-05-12
