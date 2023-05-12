@@ -25,7 +25,7 @@ optional arguments:
 *  -P `10`, --pages `10`  specify how many pages you want to download in the given board (default: 1)  
 *  -p `C://`, --path `C://`  specify the path for storing the file (default: './')  
 *  -d `nba` --dir `nba` specify the directory name for storing the file (default: '{board name}')  
-*  -t `8` thread `8` specify how many threads to use for running the program. (default: numbers of your core)  
+*  -t `8`, --thread `8` specify how many threads to use for running the program. (default: numbers of your core)  
 
 
 Custom arguments example:
