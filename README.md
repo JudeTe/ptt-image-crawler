@@ -33,7 +33,7 @@ Custom arguments example:
 python crawler.py -b nba --pages 10 --path ./ --dir nba -t 10
 ```
 
-P.S. If the number of threads is not specified, the default is to use the number of cores in the current system as the number of thread to be used.
+P.S. If the number of threads is not specified, the default is to use the number of cores in the current system as the number of threads to be used.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE.txt file for details.
