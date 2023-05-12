@@ -6,8 +6,8 @@
 
 
 """Crawl any board from PTT and download all images from the articles.
-Usage: python crawler.py -b <board name> --pages <pages> --path <path> -d <directory name> -t <threads>
-Example: python crawler.py --board nba --pages 10 --path ./ --dir nba --thread 10
+Usage: python crawler.py -b <board name> -i <start_page> <end_page> --path <path> -d <directory name> -t <threads>
+Example: python crawler.py --board nba -i 50 100 --path ./ --dir nba --thread 10
 """
 
 
@@ -21,12 +21,10 @@ from bs4 import BeautifulSoup
 
 
 numbers_of_core = os.cpu_count()
-parser = argparse.ArgumentParser(description='Ptt Crawler')
+parser = argparse.ArgumentParser(description='PttImageCrawler is a web crawling tool that crawls images from PTT.')
 parser.add_argument('--board', '-b', type=str, default='beauty', 
                     help='specify the board you want to download (default: "beauty")')
-parser.add_argument('--pages', '-P', type=int, default=1, 
-                    help='specify how many pages you want to download in the given board \
-                    (default: 1)')
+parser.add_argument('-i', metavar=('start_page', 'end_page'), type=int, nargs=2, help="start and end page")
 parser.add_argument('--path', '-p', type=str, default='', 
                     help='specify the path for storing the file (default: "./")')
 parser.add_argument('--dir', '-d', type=str, default='', 
@@ -38,7 +36,13 @@ parser.add_argument('--thread', '-t', type=int, default=numbers_of_core,
 
 args = parser.parse_args()
 board = args.board
-pages = args.pages
+if not args.i:
+    start_page = 0
+    end_page = 0
+else:
+    start_page = args.i[0]
+    end_page = args.i[1]
+    start_page = end_page if start_page > end_page else start_page
 path = args.path if args.path else os.path.dirname(os.path.abspath(__file__))
 directory_name = args.dir if args.dir else board
 directory_path = f"{path}/{directory_name}/"
@@ -46,7 +50,6 @@ if not os.path.exists(directory_path):
     os.mkdir(directory_path)
 thread_num = args.thread
 
-BASEPAGE = 0
 BOARD_PREFIX = f"https://www.ptt.cc/bbs/{board}"
 download_count = 0
 
@@ -67,7 +70,7 @@ class Worker(threading.Thread):
 
 def article_crawler(q: queue) -> None:
     """Scrape articles from given pages"""
-    for page in range(BASEPAGE, BASEPAGE + pages):
+    for page in range(start_page, end_page + 1):
         url = f"https://www.ptt.cc/bbs/{board}/index{page}.html"
         response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
