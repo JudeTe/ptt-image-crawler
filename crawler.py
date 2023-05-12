@@ -97,11 +97,15 @@ def img_crawler(article_suffix: str) -> None:
             print(f"Error: {err_}")
             continue
 
-def crawler_thread(queue: queue) -> None:
+def crawl_process(queue: queue, workers=None) -> None:
     """Non blocking get queue"""
-    while queue.qsize() > 0:
-        url = queue.get_nowait()
-        img_crawler(url)
+    for i in range(10):
+        t = Worker(queue, i)
+        t.start()
+        workers.append(t)
+    # while queue.qsize() > 0:
+    #     url = queue.get_nowait()
+    #     img_crawler(url)
 
 class Worker(threading.Thread):
     """Worker for scraping"""
@@ -130,17 +134,20 @@ if __name__ == "__main__":
             t.start()
             workers.append(t)
         elif process_num:
-            p = Process(target=crawler_thread, args=(crawler_queue, ))
+            p = Process(target=crawl_process, args=(crawler_queue, workers))
             p.start()
             workers.append(p)
     for worker in workers:
         worker.join()
 
-    # pool = Pool(worker_nums)
-    # pool_outputs = pool.map(crawler_thread, (crawler_queue, ))
+    # with Pool(processes=8) as pool:
+    #     responses = pool.apply_async(crawl_process, args=(crawler_queue, ))
 
     # pool = Pool(worker_nums)
-    # pool_outputs = pool.map_async(crawler_thread, (crawler_queue, ))
+    # pool_outputs = pool.map(crawl_process, (crawler_queue, ))
+
+    # pool = Pool(worker_nums)
+    # pool_outputs = pool.map_async(crawl_process, (crawler_queue, ))
     # pool.close()
     # pool.join()
 
