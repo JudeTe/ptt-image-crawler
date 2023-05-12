@@ -7,7 +7,7 @@
 
 """Crawl any board from PTT and download all images from the articles.
 Usage: python crawler.py -b <board name> --pages <pages> --path <path> -d <directory name> -t <threads>
-Example: python crawler.py -b nba --pages 10 --path ./ --dir nba -t 10
+Example: python crawler.py --board nba --pages 10 --path ./ --dir nba --thread 10
 """
 
 

@@ -16,21 +16,21 @@ python -m pip install -r requirements.txt
 
 ## Usage
 ```
-crawler.py [-h] [-b nba] [--pages 10] [--path C://] [--dir nba] [-t 10]
+crawler.py [-h] [--board nba] [--pages 10] [--path C://] [--dir nba] [--thread 10]
 ```
 
 optional arguments:
 *  -h, --help            show the help message and exit  
 *  -b `nba`, --board `nba`  specify the board you want to download (default: 'beauty')  
-*  --pages `10`  specify how many pages you want to download in the given board (default: 1)  
-*  --path `C://`  specify the path for storing the file (default: './')  
+*  -P `10`, --pages `10`  specify how many pages you want to download in the given board (default: 1)  
+*  -p `C://`, --path `C://`  specify the path for storing the file (default: './')  
 *  -d `nba` --dir `nba` specify the directory name for storing the file (default: '{board name}')  
 *  -t `8` thread `8` specify how many threads to use for running the program. (default: numbers of your core)  
 
 
 Custom arguments example:
 ```
-python crawler.py -b nba --pages 10 --path ./ --dir nba -t 10
+python crawler.py -b nba -P 10 -p ./ -d nba -t 10
 ```
 
 P.S. If the number of threads is not specified, the default is to use the number of cores in the current system as the number of threads to be used.
