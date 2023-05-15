@@ -6,7 +6,8 @@
 
 
 """Crawl any board from PTT and download all images from the articles.
-Usage: python crawler.py -b <board name> -i <start_page> <end_page> --path <path> -d <directory name> -t <threads>
+Usage: python crawler.py -b <board name> -i <start_page> <end_page> --path <path> 
+       -d <directory name> -t <threads>
 Example: python crawler.py --board nba -i 50 100 --path ./ --dir nba --thread 10
 """
 
@@ -58,8 +59,10 @@ class PttCrawler:
         if args.i:
             self.start_page = args.i[0]
             self.end_page = args.i[1]
-            self.start_page = self.end_page if self.start_page > self.end_page else self.start_page
-        self.path = args.path if args.path else os.path.dirname(os.path.abspath(__file__))
+            self.start_page = self.end_page if self.start_page > self.end_page else \
+            self.start_page
+        self.path = args.path if args.path else \
+        os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
         self.directory_path = f"{self.path}/{self.directory_name}/"
         if not os.path.exists(self.directory_path):
