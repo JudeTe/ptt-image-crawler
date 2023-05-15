@@ -22,7 +22,8 @@ from bs4 import BeautifulSoup
 
 
 class PttCrawler:
-    BOARD_PREFIX = f"https://www.ptt.cc/bbs"
+    """Crawl any board from PTT and download all images from the articles."""
+    BOARD_PREFIX = "https://www.ptt.cc/bbs"
     start_page = 0
     end_page = 0
     board = 'nba'
@@ -38,20 +39,21 @@ class PttCrawler:
         self.download_count = download_count
 
     def parse_arg(self):
+        """Parse arguments from command line"""
         numbers_of_core = os.cpu_count()
         parser = argparse.ArgumentParser(description='PttImageCrawler is a web crawling \
                                         tool that crawls images from PTT.')
-        parser.add_argument('--board', '-b', type=str, default='beauty', 
+        parser.add_argument('--board', '-b', type=str, default='beauty',
                             help='specify the board you want to download \
                             (default: "beauty")')
-        parser.add_argument('-i', metavar=('start_page', 'end_page'), 
+        parser.add_argument('-i', metavar=('start_page', 'end_page'),
                             type=int, nargs=2, help="start and end page")
-        parser.add_argument('--path', '-p', type=str, default='', 
+        parser.add_argument('--path', '-p', type=str, default='',
                             help='specify the path for storing the file (default: "./")')
-        parser.add_argument('--dir', '-d', type=str, default='', 
+        parser.add_argument('--dir', '-d', type=str, default='',
                             help='specify the directory name for storing the file \
                             (default: "{board name}")')
-        parser.add_argument('--thread', '-t', type=int, default=numbers_of_core, 
+        parser.add_argument('--thread', '-t', type=int, default=numbers_of_core,
                             help='specify how many threads to use for \
                             running the program. (default: numbers of your core)')
         args = parser.parse_args()
@@ -68,13 +70,13 @@ class PttCrawler:
         if not os.path.exists(self.directory_path):
             os.mkdir(self.directory_path)
         self.thread_num = args.thread
-        if self.thread_num == 0: self.thread_num = 1
+        if self.thread_num == 0:
+            self.thread_num = 1
 
     def article_crawler(self, q: queue = None) -> None:
-        """Scrape articles from given pages"""
+        """Crawl articles from given pages"""
         if q is None:
             q = self.crawler_queue
-        
         for page in range(self.start_page, self.end_page + 1):
             url = f"https://www.ptt.cc/bbs/{self.board}/index{page}.html"
             response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
@@ -90,7 +92,7 @@ class PttCrawler:
         return q
 
     def img_crawler(self, article_suffix: str) -> None:
-        """Scrape img from given article"""
+        """Crawl img from given article"""
         article_url = f"{self.BOARD_PREFIX}/{self.board}/{article_suffix}"
         response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
@@ -99,7 +101,7 @@ class PttCrawler:
             if not link.endswith('.jpg') and not link.endswith('.png'):
                 continue
             try:
-                img = requests.get(link, headers = {"cookie": "over18=1"}, 
+                img = requests.get(link, headers = {"cookie": "over18=1"},
                                    timeout=30).content
                 img_name = link.split('/')[-1]
                 img_path = f"{self.directory_path}/{img_name}"
@@ -111,11 +113,13 @@ class PttCrawler:
                 continue
 
     def crawl_thread(self):
+        """Crawl articles from queue"""
         while self.crawler_queue.qsize() > 0:
             url = self.crawler_queue.get()
             self.img_crawler(url)
 
     def crawl(self):
+        """Start crawling"""
         workers = []
         for _ in range(self.thread_num):
             t = threading.Thread(target=self.crawl_thread, args=())
@@ -123,14 +127,16 @@ class PttCrawler:
             workers.append(t)
         for worker in workers:
             worker.join()
-    
+
     def run(self):
+        """Run the program"""
         self.parse_arg()
         self.article_crawler()
         print(f"Total articles: {self.crawler_queue.qsize()}")
         self.crawl()
 
     def __del__(self):
+        """Print download count when the program ends"""
         print(f"Downloaded {self.download_count} files.")
 
 if __name__ == "__main__":
