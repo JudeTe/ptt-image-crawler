@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Author: JudeTe
-# Repo: https://github.com/JudeTe/PttImageCrawler
+# Repo: https://github.com/JudeTe/ptt-image-crawler
 # Date: 2023-05-12
 # Python version: 3.9
 
@@ -21,7 +21,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-class PttCrawler:
+class PttImageCrawler:
     """Crawl any board from PTT and download all images from the articles."""
     BOARD_PREFIX = "https://www.ptt.cc/bbs"
     start_page = 0
@@ -32,16 +32,16 @@ class PttCrawler:
     directory_path = f"{path}/{directory_name}/"
     thread_num = os.cpu_count()
 
-    def __init__(self, q=None, download_count=0) -> None:
-        if q is None:
-            q = queue.Queue()
-        self.crawler_queue = q
+    def __init__(self, crawler_queue=None, download_count=0) -> None:
+        if crawler_queue is None:
+            crawler_queue = queue.Queue()
+        self.crawler_queue = crawler_queue
         self.download_count = download_count
 
-    def parse_arg(self):
+    def parse_arg(self) -> None:
         """Parse arguments from command line"""
         numbers_of_core = os.cpu_count()
-        parser = argparse.ArgumentParser(description='PttImageCrawler is a web crawling \
+        parser = argparse.ArgumentParser(description='ptt-image-crawler is a web crawling \
                                         tool that crawls images from PTT.')
         parser.add_argument('--board', '-b', type=str, default='beauty',
                             help='specify the board you want to download \
@@ -89,7 +89,6 @@ class PttCrawler:
                 except Exception as err_:
                     print(f"Crawling article's link error: {err_}")
                     continue
-        return q
 
     def img_crawler(self, article_suffix: str) -> None:
         """Crawl img from given article"""
@@ -112,13 +111,13 @@ class PttCrawler:
                 print(f"Crawling img's link error: {err_}")
                 continue
 
-    def crawl_thread(self):
+    def crawl_thread(self) -> None:
         """Crawl articles from queue"""
         while self.crawler_queue.qsize() > 0:
             url = self.crawler_queue.get()
             self.img_crawler(url)
 
-    def crawl(self):
+    def crawl(self) -> None:
         """Start crawling"""
         workers = []
         for _ in range(self.thread_num):
@@ -128,18 +127,20 @@ class PttCrawler:
         for worker in workers:
             worker.join()
 
-    def run(self):
+    def run(self, q: queue = None) -> None:
         """Run the program"""
+        if q is None:
+            q = self.crawler_queue
         self.parse_arg()
-        self.article_crawler()
-        print(f"Total articles: {self.crawler_queue.qsize()}")
+        start_time = time.time()
+        self.article_crawler(q)
+        print(f"Succeeded! \nDownloading {q.qsize()} articles...")
         self.crawl()
+        print(f"Time taken: {time.time() - start_time:.2f} seconds.")
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Print download count when the program ends"""
         print(f"Downloaded {self.download_count} files.")
 
 if __name__ == "__main__":
-    start_time = time.time()
-    PttCrawler().run()
-    print(f"Time taken: {time.time() - start_time:.2f} seconds.")
+    PttImageCrawler().run()

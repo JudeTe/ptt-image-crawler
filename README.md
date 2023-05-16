@@ -1,12 +1,12 @@
-# PttImageCrawler
+# ptt-image-crawler
 
 ## Overview
-PttImageCrawler is a web crawling tool that crawls images from PTT (a bulletin board system in Taiwan). You can specify the board, pages, path, and even the number of threads you want to use for crawling.
+ptt-image-crawler is a web crawling tool that crawls images from PTT (a bulletin board system in Taiwan). You can specify the board, pages, path, and even the number of threads you want to use for crawling.
 
 ## Installation
 Clone this repository:
 ```
-git clone https://github.com/JudeTe/PttImageCrawler.git
+git clone https://github.com/JudeTe/ptt-image-crawler.git
 ```
 
 Install the required packages:
