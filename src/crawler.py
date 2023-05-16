@@ -14,6 +14,7 @@ Example: python crawler.py --board nba -i 50 100 --path ./ --dir nba --thread 10
 
 import os
 import time
+import re
 import queue
 import threading
 import argparse
@@ -95,14 +96,19 @@ class PttImageCrawler:
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
         response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
-        for img_html in soup.find_all("a"):
-            link = img_html.text
-            if not link.endswith('.jpg') and not link.endswith('.png'):
+        for link_html in soup.find_all("a"):
+            match = re.search(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)", link_html.text)
+            if match:
+                img_url = match.group()
+                print(img_url)
+                if not img_url.endswith(".jpg"):
+                    img_url = f"{img_url}.jpg"
+            else:
                 continue
             try:
-                img = requests.get(link, headers = {"cookie": "over18=1"},
+                img = requests.get(img_url, headers = {"cookie": "over18=1"},
                                    timeout=30).content
-                img_name = link.split('/')[-1]
+                img_name = img_url.split('/')[-1]
                 img_path = f"{self.directory_path}/{img_name}"
                 with open(img_path, "wb") as files:
                     files.write(img)
