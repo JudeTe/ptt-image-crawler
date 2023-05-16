@@ -80,7 +80,7 @@ class PttImageCrawler:
         if q is None:
             q = self.crawler_queue
         for page in range(self.start_page, self.end_page + 1):
-            url = f"https://www.ptt.cc/bbs/{self.board}/index{page}.html"
+            url = f"{self.PTT_URL}/{self.board}/index{page}.html"
             response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
             soup = BeautifulSoup(response.text, "html.parser")
             for div_title in soup.find_all("div", class_="title"):
