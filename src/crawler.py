@@ -29,10 +29,10 @@ class PttImageCrawler:
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
     start_page = 0
     end_page = 0
-    board = 'nba'
+    board = 'beauty'
     path = './'
-    directory_name = {board}
-    directory_path = f"{path}/{directory_name}/"
+    directory_name = 'beauty'
+    directory_path = f"{path}{directory_name}/"
     thread_num = os.cpu_count()
 
     def __init__(self) -> None:
@@ -49,9 +49,9 @@ class PttImageCrawler:
                             (default: "beauty")')
         parser.add_argument('-i', metavar=('start_page', 'end_page'),
                             type=int, nargs=2, help="start and end page")
-        parser.add_argument('--path', '-p', type=str, default='',
+        parser.add_argument('--path', '-p', type=str, default='./',
                             help='specify the path for storing the file (default: "./")')
-        parser.add_argument('--dir', '-d', type=str, default='',
+        parser.add_argument('--dir', '-d', type=str, default='beauty',
                             help='specify the directory name for storing the file \
                             (default: "{board name}")')
         parser.add_argument('--thread', '-t', type=int, default=numbers_of_core,
@@ -64,10 +64,10 @@ class PttImageCrawler:
             self.end_page = args.i[1]
             self.start_page = self.end_page if self.start_page > self.end_page else \
             self.start_page
-        self.path = args.path if args.path else \
+        self.path = args.path if args.path else self.path
         os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
-        self.directory_path = f"{self.path}/{self.directory_name}/"
+        self.directory_path = f"{self.path}{self.directory_name}/"
         if not os.path.exists(self.directory_path):
             os.mkdir(self.directory_path)
         self.thread_num = args.thread
@@ -129,6 +129,13 @@ class PttImageCrawler:
                                   (article_queue.get() for _ in
                                    range(article_queue.qsize())))
         print(f"Time taken: {time.time() - start_time:.2f} seconds.")
+
+
+    def __call__(self, unittest=False) -> None:
+        """Make class callable"""
+        if unittest:
+            ...
+
 
     def __del__(self) -> None:
         """Print download count when the program ends"""
