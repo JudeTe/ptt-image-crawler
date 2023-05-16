@@ -136,3 +136,4 @@ class PttImageCrawler:
 
 if __name__ == "__main__":
     PttImageCrawler().run()
+    
