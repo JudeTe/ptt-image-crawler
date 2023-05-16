@@ -38,7 +38,7 @@ class PttImageCrawler:
         self.download_count = 0
         self.article_queue = queue.Queue()
 
-    def parse_arg(self) -> None:
+    def parse_args(self) -> None:
         """Parse arguments from command line"""
         numbers_of_core = os.cpu_count()
         parser = argparse.ArgumentParser(description='ptt-image-crawler is a web crawling \
@@ -120,7 +120,7 @@ class PttImageCrawler:
     def run(self) -> None:
         """Run the program"""
         article_queue = self.article_queue
-        self.parse_arg()
+        self.parse_args()
         start_time = time.time()
         self.execute_with_threads(self.crawl_articles,
                                   range(self.start_page, self.end_page + 1))
