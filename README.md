@@ -1,5 +1,9 @@
 # ptt-image-crawler
 
+<p align="center">
+ <img src="/pic/example.png" >
+<p/>
+
 ## Overview
 ptt-image-crawler is a web crawling tool that crawls images/photos from PTT (a bulletin board system in Taiwan). You can specify the board, pages, path, and even the number of threads you want to use for crawling.
 
