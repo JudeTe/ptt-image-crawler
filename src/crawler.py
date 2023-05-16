@@ -27,17 +27,17 @@ class PttImageCrawler:
     """Crawl any board from PTT and download all images from the articles."""
     PTT_URL = "https://www.ptt.cc/bbs"
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
-    start_page = 0
-    end_page = 0
-    board = 'beauty'
-    path = './'
-    directory_name = 'beauty'
-    directory_path = f"{path}{directory_name}/"
-    thread_num = os.cpu_count()
 
     def __init__(self) -> None:
         self.download_count = 0
         self.article_queue = queue.Queue()
+        self.start_page = 0
+        self.end_page = 0
+        self.board = 'beauty'
+        self.path = './'
+        self.directory_name = 'beauty'
+        self.directory_path = f"{self.path}{self.directory_name}/"
+        self.thread_num = os.cpu_count()
 
     def parse_args(self) -> None:
         """Parse arguments from command line"""
@@ -130,16 +130,15 @@ class PttImageCrawler:
                                    range(article_queue.qsize())))
         print(f"Time taken: {time.time() - start_time:.2f} seconds.")
 
-
     def __call__(self, unittest=False) -> None:
         """Make class callable"""
         if unittest:
             ...
 
-
     def __del__(self) -> None:
         """Print download count when the program ends"""
         print(f"Downloaded {self.download_count} files.")
+
 
 if __name__ == "__main__":
     PttImageCrawler().run()
