@@ -16,8 +16,8 @@ import os
 import time
 import re
 import queue
-import threading
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import requests
 from bs4 import BeautifulSoup
 
@@ -34,11 +34,9 @@ class PttImageCrawler:
     directory_path = f"{path}/{directory_name}/"
     thread_num = os.cpu_count()
 
-    def __init__(self, crawler_queue=None) -> None:
-        if crawler_queue is None:
-            crawler_queue = queue.Queue()
-        self.crawler_queue = crawler_queue
+    def __init__(self) -> None:
         self.download_count = 0
+        self.article_queue = queue.Queue()
 
     def parse_arg(self) -> None:
         """Parse arguments from command line"""
@@ -75,27 +73,24 @@ class PttImageCrawler:
         if self.thread_num <= 0:
             self.thread_num = 1
 
-    def article_crawler(self, q: queue = None) -> None:
+    def crawl_articles(self, page: int = 0) -> None:
         """Crawl articles from given pages"""
-        if q is None:
-            q = self.crawler_queue
-        for page in range(self.start_page, self.end_page + 1):
-            url = f"{self.PTT_URL}/{self.board}/index{page}.html"
-            response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
-            soup = BeautifulSoup(response.text, "html.parser")
-            for div_title in soup.find_all("div", class_="title"):
-                link = div_title.find("a")
-                if link is None:
-                    continue
-                try:
-                    link_suffix = link["href"].split('/')[-1]
-                    if link_suffix:
-                        q.put(link_suffix)
-                except Exception as err_:
-                    print(f"Crawling article's link error: {err_}")
-                    continue
+        url = f"{self.PTT_URL}/{self.board}/index{page}.html"
+        response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
+        soup = BeautifulSoup(response.text, "html.parser")
+        for div_title in soup.find_all("div", class_="title"):
+            link = div_title.find("a")
+            if link is None:
+                continue
+            try:
+                article_suffix = link["href"].split('/')[-1]
+                if article_suffix:
+                    self.article_queue.put(article_suffix)
+            except Exception as err_:
+                print(f"Crawling article's link error: {err_}")
+                continue
 
-    def img_crawler(self, article_suffix: str) -> None:
+    def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
         response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
@@ -117,31 +112,22 @@ class PttImageCrawler:
                 print(f"Crawling img's link error: {err_}")
                 continue
 
-    def crawl_thread(self) -> None:
-        """Crawl articles from queue"""
-        while self.crawler_queue.qsize() > 0:
-            url = self.crawler_queue.get()
-            self.img_crawler(url)
+    def execute_with_threads(self, func, args) -> None:
+        """Run function with threads"""
+        with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
+            executor.map(func, args)
 
-    def crawl(self) -> None:
-        """Start crawling"""
-        workers = []
-        for _ in range(self.thread_num):
-            t = threading.Thread(target=self.crawl_thread, args=())
-            t.start()
-            workers.append(t)
-        for worker in workers:
-            worker.join()
-
-    def run(self, q: queue = None) -> None:
+    def run(self) -> None:
         """Run the program"""
-        if q is None:
-            q = self.crawler_queue
+        article_queue = self.article_queue
         self.parse_arg()
         start_time = time.time()
-        self.article_crawler(q)
-        print(f"Succeeded! \nDownloading {q.qsize()} articles...")
-        self.crawl()
+        self.execute_with_threads(self.crawl_articles,
+                                  range(self.start_page, self.end_page + 1))
+        print(f"Succeeded! \nDownloading {article_queue.qsize()} articles...")
+        self.execute_with_threads(self.crawl_images,
+                                  (article_queue.get() for _ in
+                                   range(article_queue.qsize())))
         print(f"Time taken: {time.time() - start_time:.2f} seconds.")
 
     def __del__(self) -> None:
