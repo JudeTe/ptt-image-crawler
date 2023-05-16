@@ -32,11 +32,11 @@ class PttImageCrawler:
     directory_path = f"{path}/{directory_name}/"
     thread_num = os.cpu_count()
 
-    def __init__(self, crawler_queue=None, download_count=0) -> None:
+    def __init__(self, crawler_queue=None) -> None:
         if crawler_queue is None:
             crawler_queue = queue.Queue()
         self.crawler_queue = crawler_queue
-        self.download_count = download_count
+        self.download_count = 0
 
     def parse_arg(self) -> None:
         """Parse arguments from command line"""
