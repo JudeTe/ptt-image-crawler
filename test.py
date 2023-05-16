@@ -20,6 +20,8 @@ class TestPttImageCrawler(unittest.TestCase):
         """Set up unit test"""
         self.crawler = PttImageCrawler()
 
+    def tearDown(self) -> None: ...
+
     def test_parse_args(self) -> None:
         """Test parse_args()"""
         self.crawler.parse_args()
