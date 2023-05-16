@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 class PttImageCrawler:
     """Crawl any board from PTT and download all images from the articles."""
-    BOARD_PREFIX = "https://www.ptt.cc/bbs"
+    PTT_URL = "https://www.ptt.cc/bbs"
     start_page = 0
     end_page = 0
     board = 'nba'
@@ -92,7 +92,7 @@ class PttImageCrawler:
 
     def img_crawler(self, article_suffix: str) -> None:
         """Crawl img from given article"""
-        article_url = f"{self.BOARD_PREFIX}/{self.board}/{article_suffix}"
+        article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
         response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
         for img_html in soup.find_all("a"):
