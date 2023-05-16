@@ -25,6 +25,7 @@ from bs4 import BeautifulSoup
 class PttImageCrawler:
     """Crawl any board from PTT and download all images from the articles."""
     PTT_URL = "https://www.ptt.cc/bbs"
+    IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
     start_page = 0
     end_page = 0
     board = 'nba'
@@ -71,7 +72,7 @@ class PttImageCrawler:
         if not os.path.exists(self.directory_path):
             os.mkdir(self.directory_path)
         self.thread_num = args.thread
-        if self.thread_num == 0:
+        if self.thread_num <= 0:
             self.thread_num = 1
 
     def article_crawler(self, q: queue = None) -> None:
@@ -82,9 +83,12 @@ class PttImageCrawler:
             url = f"https://www.ptt.cc/bbs/{self.board}/index{page}.html"
             response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
             soup = BeautifulSoup(response.text, "html.parser")
-            for title in soup.find_all("div", class_="title"):
+            for div_title in soup.find_all("div", class_="title"):
+                link = div_title.find("a")
+                if link is None:
+                    continue
                 try:
-                    link_suffix = title.find("a")["href"].split('/')[-1]
+                    link_suffix = link["href"].split('/')[-1]
                     if link_suffix:
                         q.put(link_suffix)
                 except Exception as err_:
@@ -96,20 +100,16 @@ class PttImageCrawler:
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
         response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
-        for link_html in soup.find_all("a"):
-            match = re.search(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)", link_html.text)
-            if match:
-                img_url = match.group()
-                print(img_url)
-                if not img_url.endswith(".jpg"):
-                    img_url = f"{img_url}.jpg"
-            else:
-                continue
+        for link_html in soup.find_all("a", {"href": self.IMAGE_URL_PATTERN}):
+            img_url = link_html.text
+            # print(img_url)
+            if not img_url.endswith(".jpg"):
+                img_url = f"{img_url}.jpg"
+            img = requests.get(img_url, headers = {"cookie": "over18=1"},
+                                timeout=30).content
+            img_name = img_url.split('/')[-1]
+            img_path = f"{self.directory_path}/{img_name}"
             try:
-                img = requests.get(img_url, headers = {"cookie": "over18=1"},
-                                   timeout=30).content
-                img_name = img_url.split('/')[-1]
-                img_path = f"{self.directory_path}/{img_name}"
                 with open(img_path, "wb") as files:
                     files.write(img)
                     self.download_count += 1
