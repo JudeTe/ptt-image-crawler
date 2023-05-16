@@ -8,7 +8,8 @@
 """Crawl any board from PTT and download all images from the articles.
 Usage: python crawler.py -b <board name> -i <start_page> <end_page> --path <path> 
        -d <directory name> -t <threads>
-Example: python crawler.py --board nba -i 50 100 --path ./ --dir nba --thread 10
+Example: python crawler.py --board nba -i 3990 4000 --path ./ --dir nba --thread 10
+Quick Start: python crawler.py
 """
 
 
@@ -97,7 +98,6 @@ class PttImageCrawler:
         soup = BeautifulSoup(response.text, "html.parser")
         for link_html in soup.find_all("a", {"href": self.IMAGE_URL_PATTERN}):
             img_url = link_html.text
-            # print(img_url)
             if not img_url.endswith(".jpg"):
                 img_url = f"{img_url}.jpg"
             img = requests.get(img_url, headers = {"cookie": "over18=1"},
