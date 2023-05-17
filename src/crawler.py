@@ -38,6 +38,7 @@ class PttImageCrawler:
         self.directory_name = 'beauty'
         self.directory_path = f"{self.path}{self.directory_name}/"
         self.thread_num = os.cpu_count()
+        self.max_page_of_board = 0
 
     def parse_args(self) -> None:
         """Parse arguments from command line"""
@@ -74,8 +75,25 @@ class PttImageCrawler:
         if self.thread_num <= 0:
             self.thread_num = 1
 
+    def get_board_max_page(self) -> None:
+        """Get the max page of the board"""
+        url = f"{self.PTT_URL}/{self.board}/index.html"
+        response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
+        soup = BeautifulSoup(response.text, "html.parser")
+        last_page_url = soup.find_all("a", class_="btn wide")[1]["href"]
+        tags = soup.find_all('a', class_="btn wide", text="上頁")
+        if tags:
+            last_page_url = tags[0]["href"]
+        self.max_page_of_board = int(last_page_url.split("index")[1].split(".")[0])
+        print(f"Max page: {self.max_page_of_board}")
+
     def crawl_articles(self, page: int = 0) -> None:
         """Crawl articles from given pages"""
+        if page != 0:
+            page = self.max_page_of_board - page + 1
+            print(f"Article page number: {page}")
+        else:
+            print(f"Article page number: {page}")
         url = f"{self.PTT_URL}/{self.board}/index{page}.html"
         response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
@@ -122,8 +140,9 @@ class PttImageCrawler:
         article_queue = self.article_queue
         self.parse_args()
         start_time = time.time()
+        self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
-                                  range(self.start_page, self.end_page + 1))
+                                  (i for i in range(self.start_page, self.end_page + 1)))
         print(f"Succeeded! \nDownloading {article_queue.qsize()} articles...")
         self.execute_with_threads(self.crawl_images,
                                   (article_queue.get() for _ in
