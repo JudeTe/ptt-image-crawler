@@ -31,7 +31,6 @@ optional arguments:
 *  -d `nba` --dir `nba` specify the directory name for storing the file (default: '{board name}')  
 *  -t `8`, --thread `8` specify how many threads to use for running the program. (default: numbers of your core)  
 
-
 Custom arguments example:
 ```
 python crawler.py -b nba -i 50 100 -p ./ -d nba -t 10
@@ -43,6 +42,9 @@ P.S. If the number of threads is not specified, the default is to use the number
 ```
 python crawler.py
 ```
+
+## Issue reporting
+If you discover an issue with ptt-image-crawler, please report it at https://github.com/JudeTe/ptt-image-crawler/issues, thanks!
 
 ## License
 This project is licensed under the MIT License - see the LICENSE.txt file for details.
