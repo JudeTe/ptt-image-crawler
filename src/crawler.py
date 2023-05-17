@@ -142,9 +142,11 @@ class PttImageCrawler:
         with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
             executor.map(func, args)
 
-    def run(self) -> None:
+    def run(self, testing=False) -> None:
         """Run the program"""
         self.parse_args()
+        if testing:
+            logging.basicConfig(level=logging.INFO)
         start_time = time.time()
         self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
@@ -160,11 +162,6 @@ class PttImageCrawler:
                                   (self.image_queue.get() for _ in
                                    range(self.image_queue.qsize())))
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
-
-    def __call__(self, testing=False) -> None:
-        """Set logging level when testing"""
-        if testing:
-            logging.basicConfig(level=logging.INFO)
 
     def __del__(self) -> None:
         """Print download count when the program ends"""
