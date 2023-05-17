@@ -63,8 +63,8 @@ class PttImageCrawler:
         if args.i:
             self.start_page = args.i[0]
             self.end_page = args.i[1]
-            self.start_page = self.end_page if self.start_page > self.end_page else \
-            self.start_page
+            if self.start_page > self.end_page:
+                self.start_page, self.end_page = self.end_page, self.start_page
         self.path = args.path if args.path else self.path
         os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
