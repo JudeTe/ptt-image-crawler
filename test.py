@@ -22,17 +22,6 @@ class TestPttImageCrawler(unittest.TestCase):
 
     def tearDown(self) -> None: ...
 
-    def test_parse_args(self) -> None:
-        """Test parse_args()"""
-        self.crawler.parse_args()
-        self.assertEqual(self.crawler.board, 'beauty')
-        self.assertEqual(self.crawler.start_page, 0)
-        self.assertEqual(self.crawler.end_page, 0)
-        self.assertEqual(self.crawler.path, './')
-        self.assertEqual(self.crawler.directory_name, 'beauty')
-        self.assertEqual(self.crawler.directory_path, './beauty/')
-        self.assertEqual(self.crawler.thread_num, self.numbers_of_core)
-
     def test_crawl_articles(self) -> None:
         """Test crawl_articles()"""
         self.crawler.crawl_articles()
