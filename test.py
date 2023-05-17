@@ -34,6 +34,8 @@ class TestPttImageCrawler(unittest.TestCase):
 
     def test_download(self) -> None:
         """Test download()"""
+        if not os.path.exists(self.crawler.directory_path):
+            os.mkdir(self.crawler.directory_path)
         self.crawler.download(url="https://i.imgur.com/9QXwvI2.jpg")
         self.assertGreater(self.crawler.download_count, 0)
 
