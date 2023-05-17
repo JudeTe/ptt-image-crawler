@@ -51,6 +51,10 @@ coverage.xml
 .pytest_cache/
 cover/
 test/
+nba/
+beauty/
+gossiping/
+
 # Translations
 *.mo
 *.pot
