@@ -18,6 +18,7 @@ import time
 import re
 import queue
 import argparse
+import logging
 from concurrent.futures import ThreadPoolExecutor
 import requests
 from bs4 import BeautifulSoup
@@ -85,15 +86,15 @@ class PttImageCrawler:
         if tags:
             last_page_url = tags[0]["href"]
         self.max_page_of_board = int(last_page_url.split("index")[1].split(".")[0])
-        print(f"Max page: {self.max_page_of_board}")
+        logging.info("Max page: %d", self.max_page_of_board)
 
     def crawl_articles(self, page: int = 0) -> None:
         """Crawl articles from given pages"""
         if page != 0:
             page = self.max_page_of_board - page + 1
-            print(f"Article page number: {page}")
+            logging.info("Article page number: %d", page)
         else:
-            print(f"Article page number: {page}")
+            logging.info("Article page number: %d", page)
         url = f"{self.PTT_URL}/{self.board}/index{page}.html"
         response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
         soup = BeautifulSoup(response.text, "html.parser")
@@ -106,7 +107,7 @@ class PttImageCrawler:
                 if article_suffix:
                     self.article_queue.put(article_suffix)
             except Exception as err_:
-                print(f"Crawling article's link error: {err_}")
+                logging.error("Crawling article's link error: %s", err_)
                 continue
 
     def crawl_images(self, article_suffix: str) -> None:
@@ -127,7 +128,7 @@ class PttImageCrawler:
                     files.write(img)
                     self.download_count += 1
             except Exception as err_:
-                print(f"Crawling img's link error: {err_}")
+                logging.error("Crawling img's link error: %s", err_)
                 continue
 
     def execute_with_threads(self, func, args) -> None:
@@ -143,22 +144,22 @@ class PttImageCrawler:
         self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
                                   (i for i in range(self.start_page, self.end_page + 1)))
-        print(f"Succeeded! \nDownloading {article_queue.qsize()} articles...")
+        logging.info("Succeeded! \nDownloading %d articles...", article_queue.qsize())
         self.execute_with_threads(self.crawl_images,
                                   (article_queue.get() for _ in
                                    range(article_queue.qsize())))
-        print(f"Time taken: {time.time() - start_time:.2f} seconds.")
+        logging.info("Time taken: %.2f seconds.", time.time() - start_time)
 
-    def __call__(self, unittest=False) -> None:
-        """Make class callable"""
-        if unittest:
-            ...
+    def __call__(self, testing=False) -> None:
+        """Set logging level when testing"""
+        if testing:
+            logging.basicConfig(level=logging.INFO)
 
     def __del__(self) -> None:
         """Print download count when the program ends"""
-        print(f"Downloaded {self.download_count} files.")
+        logging.info("Downloaded %d files.", self.download_count)
 
 
 if __name__ == "__main__":
-    PttImageCrawler().run()
-    
+    crawler = PttImageCrawler()
+    crawler.run()
