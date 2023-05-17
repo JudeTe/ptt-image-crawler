@@ -47,5 +47,5 @@ python crawler.py
 If you discover an issue with ptt-image-crawler, please report it at https://github.com/JudeTe/ptt-image-crawler/issues, thanks!
 
 ## License
-This project is licensed under the MIT License - see the LICENSE.txt file for details.
+This project is licensed under the MIT License - see the [LICENSE.txt](https://github.com/JudeTe/ptt-image-crawler/blob/master/LICENSE.txt) file for details.
 
