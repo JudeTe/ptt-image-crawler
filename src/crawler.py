@@ -51,7 +51,7 @@ class PttImageCrawler:
                             type=int, nargs=2, help="start and end page")
         parser.add_argument('--path', '-p', type=str, default='./',
                             help='specify the path for storing the file (default: "./")')
-        parser.add_argument('--dir', '-d', type=str, default='beauty',
+        parser.add_argument('--dir', '-d', type=str, default='',
                             help='specify the directory name for storing the file \
                             (default: "{board name}")')
         parser.add_argument('--thread', '-t', type=int, default=numbers_of_core,
