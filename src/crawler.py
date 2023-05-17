@@ -32,12 +32,13 @@ class PttImageCrawler:
     def __init__(self) -> None:
         self.download_count = 0
         self.article_queue = queue.Queue()
+        self.image_queue = queue.Queue()
         self.start_page = 0
         self.end_page = 0
         self.board = 'beauty'
         self.path = './'
         self.directory_name = 'beauty'
-        self.directory_path = f"{self.path}{self.directory_name}/"
+        self.directory_path = f"{self.path}{self.directory_name}"
         self.thread_num = os.cpu_count()
         self.max_page_of_board = 0
         self.session = requests.session()
@@ -72,7 +73,7 @@ class PttImageCrawler:
         self.path = args.path if args.path else self.path
         os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
-        self.directory_path = f"{self.path}{self.directory_name}/"
+        self.directory_path = f"{self.path}{self.directory_name}"
         if not os.path.exists(self.directory_path):
             os.mkdir(self.directory_path)
         self.thread_num = args.thread
@@ -81,8 +82,8 @@ class PttImageCrawler:
 
     def get_board_max_page(self) -> None:
         """Get the max page of the board"""
-        url = f"{self.PTT_URL}/{self.board}/index.html"
-        response = self.session.get(url)
+        board_index_url = f"{self.PTT_URL}/{self.board}/index.html"
+        response = self.session.get(board_index_url)
         soup = BeautifulSoup(response.text, "html.parser")
         last_page_url = soup.find_all("a", class_="btn wide")[1]["href"]
         tags = soup.find_all('a', class_="btn wide", text="上頁")
@@ -98,8 +99,8 @@ class PttImageCrawler:
             logging.info("Article page number: %d", page)
         else:
             logging.info("Article page number: %d", page)
-        url = f"{self.PTT_URL}/{self.board}/index{page}.html"
-        response = self.session.get(url)
+        page_url = f"{self.PTT_URL}/{self.board}/index{page}.html"
+        response = self.session.get(page_url)
         soup = BeautifulSoup(response.text, "html.parser")
         for div_title in soup.find_all("div", class_="title"):
             link = div_title.find("a")
@@ -113,6 +114,18 @@ class PttImageCrawler:
                 logging.error("Crawling article's link error: %s", err_)
                 continue
 
+    def download(self, url: str) -> None:
+        """Download file from given url"""
+        file_name = url.split('/')[-1]
+        file_path = f"{self.directory_path}/{file_name}"
+        img = self.session.get(url).content
+        try:
+            with open(file_path, "wb") as files:
+                files.write(img)
+            self.download_count += 1
+        except Exception as err_:
+            logging.error("Download error: %s", err_)
+
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
@@ -122,16 +135,7 @@ class PttImageCrawler:
             img_url = link_html.text
             if not img_url.endswith(".jpg"):
                 img_url = f"{img_url}.jpg"
-            img = self.session.get(img_url).content
-            img_name = img_url.split('/')[-1]
-            img_path = f"{self.directory_path}/{img_name}"
-            try:
-                with open(img_path, "wb") as files:
-                    files.write(img)
-                    self.download_count += 1
-            except Exception as err_:
-                logging.error("Crawling img's link error: %s", err_)
-                continue
+            self.image_queue.put(img_url)
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads"""
@@ -140,16 +144,21 @@ class PttImageCrawler:
 
     def run(self) -> None:
         """Run the program"""
-        article_queue = self.article_queue
         self.parse_args()
         start_time = time.time()
         self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
                                   (i for i in range(self.start_page, self.end_page + 1)))
-        logging.info("Succeeded! \nDownloading %d articles...", article_queue.qsize())
+        logging.info("Succeeded! \nDownloading %d articles...",
+                     self.article_queue.qsize())
         self.execute_with_threads(self.crawl_images,
-                                  (article_queue.get() for _ in
-                                   range(article_queue.qsize())))
+                                  (self.article_queue.get() for _ in
+                                   range(self.article_queue.qsize())))
+        logging.info("Succeeded! \nDownloading %d files...",
+                     self.image_queue.qsize())
+        self.execute_with_threads(self.download,
+                                  (self.image_queue.get() for _ in
+                                   range(self.image_queue.qsize())))
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
 
     def __call__(self, testing=False) -> None:
