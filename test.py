@@ -39,6 +39,8 @@ class TestPttImageCrawler(unittest.TestCase):
         self.crawler.download(url="https://i.imgur.com/9QXwvI2.jpg")
         self.assertGreater(self.crawler.download_count, 0)
         os.remove(f"{self.crawler.directory_path}/9QXwvI2.jpg")
+        if not os.listdir(self.crawler.directory_path):
+            os.rmdir(self.crawler.directory_path)
 
 if __name__ == "__main__":
     unittest.main()
