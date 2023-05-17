@@ -114,18 +114,6 @@ class PttImageCrawler:
                 logging.error("Crawling article's link error: %s", err_)
                 continue
 
-    def download(self, url: str) -> None:
-        """Download file from given url"""
-        file_name = url.split('/')[-1]
-        file_path = f"{self.directory_path}/{file_name}"
-        img = self.session.get(url).content
-        try:
-            with open(file_path, "wb") as files:
-                files.write(img)
-            self.download_count += 1
-        except Exception as err_:
-            logging.error("Download error: %s", err_)
-
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
@@ -136,6 +124,18 @@ class PttImageCrawler:
             if not img_url.endswith(".jpg"):
                 img_url = f"{img_url}.jpg"
             self.image_queue.put(img_url)
+
+    def download(self, url: str) -> None:
+        """Download file from given url"""
+        file_name = url.split('/')[-1]
+        file_path = f"{self.directory_path}/{file_name}"
+        file_content = self.session.get(url).content
+        try:
+            with open(file_path, "wb") as file:
+                file.write(file_content)
+            self.download_count += 1
+        except Exception as err_:
+            logging.error("Download error: %s", err_)
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads"""
