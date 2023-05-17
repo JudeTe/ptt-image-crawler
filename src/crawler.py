@@ -40,6 +40,9 @@ class PttImageCrawler:
         self.directory_path = f"{self.path}{self.directory_name}/"
         self.thread_num = os.cpu_count()
         self.max_page_of_board = 0
+        self.session = requests.session()
+        self.session.cookies.set('over18', '1')
+        self.session.timeout = 5
 
     def parse_args(self) -> None:
         """Parse arguments from command line"""
@@ -79,7 +82,7 @@ class PttImageCrawler:
     def get_board_max_page(self) -> None:
         """Get the max page of the board"""
         url = f"{self.PTT_URL}/{self.board}/index.html"
-        response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
+        response = self.session.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         last_page_url = soup.find_all("a", class_="btn wide")[1]["href"]
         tags = soup.find_all('a', class_="btn wide", text="上頁")
@@ -96,7 +99,7 @@ class PttImageCrawler:
         else:
             logging.info("Article page number: %d", page)
         url = f"{self.PTT_URL}/{self.board}/index{page}.html"
-        response = requests.get(url, headers = {"cookie": "over18=1"}, timeout=30)
+        response = self.session.get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         for div_title in soup.find_all("div", class_="title"):
             link = div_title.find("a")
@@ -113,14 +116,13 @@ class PttImageCrawler:
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
-        response = requests.get(article_url, headers={"cookie": "over18=1"}, timeout=30)
+        response = self.session.get(article_url)
         soup = BeautifulSoup(response.text, "html.parser")
         for link_html in soup.find_all("a", {"href": self.IMAGE_URL_PATTERN}):
             img_url = link_html.text
             if not img_url.endswith(".jpg"):
                 img_url = f"{img_url}.jpg"
-            img = requests.get(img_url, headers = {"cookie": "over18=1"},
-                                timeout=30).content
+            img = self.session.get(img_url).content
             img_name = img_url.split('/')[-1]
             img_path = f"{self.directory_path}/{img_name}"
             try:
