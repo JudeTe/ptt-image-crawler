@@ -25,15 +25,17 @@ class TestPttImageCrawler(unittest.TestCase):
     def test_crawl_articles(self) -> None:
         """Test crawl_articles()"""
         self.crawler.crawl_articles()
-        self.assertGreaterEqual(self.crawler.article_queue.qsize(), 0)
+        self.assertGreater(self.crawler.article_queue.qsize(), 0)
 
     def test_crawl_images(self) -> None:
         """Test crawl_images()"""
-        self.crawler.crawl_articles()
-        for _ in range(1):
-            self.crawler.crawl_images(self.crawler.article_queue.get())
-        self.assertGreaterEqual(self.crawler.download_count, 0)
+        self.crawler.crawl_images("M.1684280091.A.C27.html")
+        self.assertGreater(self.crawler.image_queue.qsize(), 0)
 
+    def test_download(self) -> None:
+        """Test download()"""
+        self.crawler.download(url="https://i.imgur.com/9QXwvI2.jpg")
+        self.assertGreater(self.crawler.download_count, 0)
 
 if __name__ == "__main__":
     unittest.main()
