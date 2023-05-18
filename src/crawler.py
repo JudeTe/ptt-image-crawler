@@ -86,7 +86,9 @@ class PttImageCrawler:
         try:
             response = self.session.get(board_index_url)
             response.raise_for_status()
-        except requests.exceptions.HTTPError as err_:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
+                requests.exceptions.RequestException) as err_:
             logging.error("Get board max page network error: %s", err_)
             return
         soup = BeautifulSoup(response.text, "html.parser")
@@ -108,7 +110,9 @@ class PttImageCrawler:
         try:
             response = self.session.get(page_url)
             response.raise_for_status()
-        except requests.exceptions.HTTPError as err_:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
+                requests.exceptions.RequestException) as err_:
             logging.error("Crawling articles network error: %s", err_)
             return
         soup = BeautifulSoup(response.text, "html.parser")
@@ -122,7 +126,9 @@ class PttImageCrawler:
         try:
             response = self.session.get(article_url)
             response.raise_for_status()
-        except requests.exceptions.HTTPError as err_:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
+                requests.exceptions.RequestException) as err_:
             logging.error("Crawling images network error: %s", err_)
             return
         soup = BeautifulSoup(response.text, "html.parser")
@@ -140,7 +146,9 @@ class PttImageCrawler:
         try:
             response = self.session.get(url)
             response.raise_for_status()
-        except requests.exceptions.HTTPError as err_:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
+                requests.exceptions.RequestException) as err_:
             logging.error("Download network error: %s", err_)
             return
         file_content = response.content
