@@ -13,12 +13,12 @@ Quick Start: python crawler.py
 """
 
 
-import os
-import time
-import re
-import queue
 import argparse
 import logging
+import os
+import queue
+import re
+import time
 from concurrent.futures import ThreadPoolExecutor
 import requests
 from bs4 import BeautifulSoup
