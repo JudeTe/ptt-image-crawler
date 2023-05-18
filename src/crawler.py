@@ -71,7 +71,6 @@ class PttImageCrawler:
             if self.start_page > self.end_page:
                 self.start_page, self.end_page = self.end_page, self.start_page
         self.path = args.path if args.path else self.path
-        os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
         self.directory_path = os.path.join(self.path, self.directory_name)
         if not os.path.exists(self.directory_path):
@@ -176,6 +175,7 @@ class PttImageCrawler:
         self.parse_args()
         if testing:
             logging.basicConfig(level=logging.INFO)
+            # self.path = os.path.dirname(os.path.abspath(__file__))
         start_time = time.time()
         self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
