@@ -112,17 +112,9 @@ class PttImageCrawler:
             logging.error("Crawling articles network error: %s", err_)
             return
         soup = BeautifulSoup(response.text, "html.parser")
-        for div_title in soup.find_all("div", class_="title"):
-            link = div_title.find("a")
-            if link is None:
-                continue
-            try:
-                article_suffix = link["href"].split('/')[-1]
-                if article_suffix:
-                    self.article_queue.put(article_suffix)
-            except Exception as err_:
-                logging.error("Crawling article's link error: %s", err_)
-                continue
+        for link in soup.select("div.title a[href]"):
+            article_suffix = link["href"].split("/")[-1]
+            self.article_queue.put(article_suffix)
 
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
@@ -148,16 +140,23 @@ class PttImageCrawler:
         try:
             response = self.session.get(url)
             response.raise_for_status()
-            file_content = response.content
         except requests.exceptions.HTTPError as err_:
-            logging.error("Download network network error: %s", err_)
+            logging.error("Download network error: %s", err_)
             return
+        file_content = response.content
         try:
             with open(file_path, "wb") as file:
                 file.write(file_content)
-            self.download_count += 1
+        except PermissionError:
+            logging.error("PermissionError: %s", file_path)
+            return
+        except IOError as io_err:
+            logging.error("I/O error: %s", str(io_err))
+            return
         except Exception as err_:
-            logging.error("Download file error: %s", err_)
+            logging.error("Save file unknown error: %s", err_)
+            return
+        self.download_count += 1
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads"""
@@ -186,7 +185,7 @@ class PttImageCrawler:
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
 
     def __del__(self) -> None:
-        """Print download count when the program ends"""
+        """logging download count when the program ends"""
         logging.info("Downloaded %d files.", self.download_count)
 
 
