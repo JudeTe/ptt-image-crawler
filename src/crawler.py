@@ -83,7 +83,12 @@ class PttImageCrawler:
     def get_board_max_page(self) -> None:
         """Get the max page of the board"""
         board_index_url = f"{self.PTT_URL}/{self.board}/index.html"
-        response = self.session.get(board_index_url)
+        try:
+            response = self.session.get(board_index_url)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err_:
+            logging.error("Get board max page network error: %s", err_)
+            return
         soup = BeautifulSoup(response.text, "html.parser")
         last_page_url = soup.find_all("a", class_="btn wide")[1]["href"]
         tags = soup.find_all('a', class_="btn wide", text="上頁")
@@ -100,7 +105,12 @@ class PttImageCrawler:
         else:
             logging.info("Article page number: %d", page)
         page_url = f"{self.PTT_URL}/{self.board}/index{page}.html"
-        response = self.session.get(page_url)
+        try:
+            response = self.session.get(page_url)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err_:
+            logging.error("Crawling articles network error: %s", err_)
+            return
         soup = BeautifulSoup(response.text, "html.parser")
         for div_title in soup.find_all("div", class_="title"):
             link = div_title.find("a")
@@ -117,7 +127,12 @@ class PttImageCrawler:
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from given article"""
         article_url = f"{self.PTT_URL}/{self.board}/{article_suffix}"
-        response = self.session.get(article_url)
+        try:
+            response = self.session.get(article_url)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err_:
+            logging.error("Crawling images network error: %s", err_)
+            return
         soup = BeautifulSoup(response.text, "html.parser")
         for link_html in soup.find_all("a", {"href": self.IMAGE_URL_PATTERN}):
             img_url = link_html.text
@@ -130,13 +145,19 @@ class PttImageCrawler:
         if not file_name:
             file_name = url.split('/')[-1]
         file_path = f"{self.directory_path}/{file_name}"
-        file_content = self.session.get(url).content
+        try:
+            response = self.session.get(url)
+            response.raise_for_status()
+            file_content = response.content
+        except requests.exceptions.HTTPError as err_:
+            logging.error("Download network network error: %s", err_)
+            return
         try:
             with open(file_path, "wb") as file:
                 file.write(file_content)
             self.download_count += 1
         except Exception as err_:
-            logging.error("Download error: %s", err_)
+            logging.error("Download file error: %s", err_)
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads"""
