@@ -8,7 +8,7 @@
 """Crawl any board from PTT and download all images from the articles.
 Usage: python crawler.py -b <board name> -i <start_page> <end_page> --path <path> 
        -d <directory name> -t <threads>
-Example: python crawler.py --board nba -i 3990 4000 --path ./ --dir nba --thread 10
+Example: python crawler.py --b nba -i 50 100 -p C:// -d nba -t 10
 Quick Start: python crawler.py
 """
 
@@ -36,9 +36,9 @@ class PttImageCrawler:
         self.start_page = 0
         self.end_page = 0
         self.board = 'beauty'
-        self.path = './'
+        self.path = '.'
         self.directory_name = 'beauty'
-        self.directory_path = f"{self.path}{self.directory_name}"
+        self.directory_path = os.path.join(self.path, self.directory_name)
         self.thread_num = os.cpu_count()
         self.max_page_of_board = 0
         self.session = requests.session()
@@ -55,8 +55,8 @@ class PttImageCrawler:
                             (default: "beauty")')
         parser.add_argument('-i', metavar=('start_page', 'end_page'),
                             type=int, nargs=2, help="start and end page")
-        parser.add_argument('--path', '-p', type=str, default='./',
-                            help='specify the path for storing the file (default: "./")')
+        parser.add_argument('--path', '-p', type=str, default='.',
+                            help='specify the path for storing the file (default: ".")')
         parser.add_argument('--dir', '-d', type=str, default='',
                             help='specify the directory name for storing the file \
                             (default: "{board name}")')
@@ -73,7 +73,7 @@ class PttImageCrawler:
         self.path = args.path if args.path else self.path
         os.path.dirname(os.path.abspath(__file__))
         self.directory_name = args.dir if args.dir else self.board
-        self.directory_path = f"{self.path}{self.directory_name}"
+        self.directory_path = os.path.join(self.path, self.directory_name)
         if not os.path.exists(self.directory_path):
             os.mkdir(self.directory_path)
         self.thread_num = args.thread
@@ -142,7 +142,7 @@ class PttImageCrawler:
         """Download file from given url"""
         if not file_name:
             file_name = url.split('/')[-1]
-        file_path = f"{self.directory_path}/{file_name}"
+        file_path = os.path.join(self.directory_path, file_name)
         try:
             response = self.session.get(url)
             response.raise_for_status()
