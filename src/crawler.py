@@ -102,9 +102,6 @@ class PttImageCrawler:
         """Crawl articles from given pages"""
         if page != 0:
             page = self.max_page_of_board - page + 1
-            logging.info("Article page number: %d", page)
-        else:
-            logging.info("Article page number: %d", page)
         page_url = f"{self.PTT_URL}/{self.board}/index{page}.html"
         try:
             response = self.session.get(page_url)
