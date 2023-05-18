@@ -177,13 +177,11 @@ class PttImageCrawler:
         self.get_board_max_page()
         self.execute_with_threads(self.crawl_articles,
                                   (i for i in range(self.start_page, self.end_page + 1)))
-        logging.info("Succeeded! \nDownloading %d articles...",
-                     self.article_queue.qsize())
+        logging.info("Download from %d articles...", self.article_queue.qsize())
         self.execute_with_threads(self.crawl_images,
                                   (self.article_queue.get() for _ in
                                    range(self.article_queue.qsize())))
-        logging.info("Succeeded! \nDownloading %d files...",
-                     self.image_queue.qsize())
+        logging.info("Downloading %d files...", self.image_queue.qsize())
         self.execute_with_threads(self.download,
                                   (self.image_queue.get() for _ in
                                    range(self.image_queue.qsize())))
