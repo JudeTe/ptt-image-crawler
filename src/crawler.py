@@ -125,9 +125,10 @@ class PttImageCrawler:
                 img_url = f"{img_url}.jpg"
             self.image_queue.put(img_url)
 
-    def download(self, url: str) -> None:
+    def download(self, url: str, file_name: str = None) -> None:
         """Download file from given url"""
-        file_name = url.split('/')[-1]
+        if not file_name:
+            file_name = url.split('/')[-1]
         file_path = f"{self.directory_path}/{file_name}"
         file_content = self.session.get(url).content
         try:
