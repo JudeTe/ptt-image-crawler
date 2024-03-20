@@ -20,28 +20,31 @@ import queue
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 import requests
 from bs4 import BeautifulSoup
 
 
+@dataclass
 class PttImageCrawler:
     """Crawl any board from PTT and download all images from the articles."""
     PTT_URL = "https://www.ptt.cc/bbs"
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
 
-    def __init__(self) -> None:
-        self.download_count = 0
-        self.article_queue = queue.Queue()
-        self.image_queue = queue.Queue()
-        self.start_page = 0
-        self.end_page = 0
-        self.board = 'beauty'
-        self.path = '.'
-        self.directory_name = 'beauty'
-        self.directory_path = os.path.join(self.path, self.directory_name)
-        self.thread_num = os.cpu_count()
-        self.max_page_of_board = 0
-        self.session = requests.session()
+    download_count: int = 0
+    start_page: int = 0
+    end_page: int = 0
+    max_page_of_board: int = 0
+    board: str = 'beauty'
+    path: str = '.'
+    directory_name: str = 'beauty'
+    directory_path: str = os.path.join(path, directory_name)
+    thread_num: int = os.cpu_count()
+    article_queue: queue.Queue = field(default_factory=queue.Queue)
+    image_queue: queue.Queue = field(default_factory=queue.Queue)
+    session: requests.Session = field(default_factory=requests.Session)
+
+    def __post_init__(self) -> None:
         self.session.cookies.set('over18', '1')
         self.session.timeout = 5
         self.session.headers = {
