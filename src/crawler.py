@@ -95,7 +95,7 @@ class PttImageCrawler(BaseCrawler):
     image_queue: queue.Queue = field(default_factory=queue.Queue)
 
     def parse_args(self) -> None:
-        """Parse arguments from command line"""
+        """Parse arguments from command line."""
         numbers_of_core = os.cpu_count()
         parser = argparse.ArgumentParser(description='ptt-image-crawler is a web crawling \
                                         tool that crawls images from PTT.')
@@ -129,7 +129,7 @@ class PttImageCrawler(BaseCrawler):
             self.thread_num = 1
 
     def get_board_max_page(self) -> None:
-        """Get the max page of the board"""
+        """Get the max page of the board."""
         board_index_url = f"{self.__class__.PTT_URL}/{self.board}/index.html"
         try:
             response = self.session.get(board_index_url)
@@ -148,7 +148,7 @@ class PttImageCrawler(BaseCrawler):
         logging.info("Max page: %d", self.max_page_of_board)
 
     def crawl_articles(self, page: int = 0) -> None:
-        """Crawl articles from given pages"""
+        """Crawl articles from the given pages."""
         if page != 0:
             page = self.max_page_of_board - page + 1
         page_url = f"{self.__class__.PTT_URL}/{self.board}/index{page}.html"
@@ -166,7 +166,7 @@ class PttImageCrawler(BaseCrawler):
             self.article_queue.put(article_suffix)
 
     def crawl_images(self, article_suffix: str) -> None:
-        """Crawl img from given article"""
+        """Crawl img from the given articles."""
         article_url = f"{self.__class__.PTT_URL}/{self.board}/{article_suffix}"
         try:
             response = self.session.get(article_url)
@@ -184,12 +184,12 @@ class PttImageCrawler(BaseCrawler):
             self.image_queue.put(img_url)
 
     def execute_with_threads(self, func, args) -> None:
-        """Run function with threads"""
+        """Run function with threads."""
         with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
             executor.map(func, args)
 
     def crawl(self, is_testing=False) -> None:
-        """crawl PTT"""
+        """Crawl PTT."""
         self.parse_args()
         if is_testing:
             logging.basicConfig(level=logging.INFO)
@@ -209,7 +209,7 @@ class PttImageCrawler(BaseCrawler):
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
 
     def __del__(self) -> None:
-        """logging download count when the program ends"""
+        """Logging download count when the program ends."""
         logging.info("Downloaded %d files.", self.download_count)
 
 
