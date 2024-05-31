@@ -34,6 +34,7 @@ class BaseCrawler(ABC):
     directory_name: str = 'Download'
     directory_path: str = os.path.join(path, directory_name)
     session: requests.Session = field(default_factory=requests.Session)
+    thread_num: int = os.cpu_count()
 
     def __post_init__(self) -> None:
         self.session.cookies.set('over18', '1')
@@ -46,6 +47,11 @@ class BaseCrawler(ABC):
 
     @abstractmethod
     def crawl(): ...
+
+    def execute_with_threads(self, func, args) -> None:
+        """Run function with threads."""
+        with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
+            executor.map(func, args)
 
     def download(self, url: str, file_name: str = None) -> None:
         """Download the file from the given URL and save it to the specified path."""
@@ -74,6 +80,11 @@ class BaseCrawler(ABC):
             logging.error("Save file unknown error: %s", err_)
             return
         self.download_count += 1
+
+    def __del__(self) -> None:
+        """Logging download count when the program ends."""
+        logging.info("%s Downloaded %d files.", self.__class__.__name__, 
+                     self.download_count)
 
 
 @dataclass
@@ -183,11 +194,6 @@ class PttImageCrawler(BaseCrawler):
                 img_url = f"{img_url}.jpg"
             self.image_queue.put(img_url)
 
-    def execute_with_threads(self, func, args) -> None:
-        """Run function with threads."""
-        with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
-            executor.map(func, args)
-
     def crawl(self, is_testing=False) -> None:
         """Crawl PTT."""
         self.parse_args()
@@ -207,10 +213,6 @@ class PttImageCrawler(BaseCrawler):
                                   (self.image_queue.get() for _ in
                                    range(self.image_queue.qsize())))
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
-
-    def __del__(self) -> None:
-        """Logging download count when the program ends."""
-        logging.info("Downloaded %d files.", self.download_count)
 
 
 if __name__ == "__main__":
