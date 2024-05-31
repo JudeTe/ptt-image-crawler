@@ -175,10 +175,10 @@ class PttImageCrawler:
         with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
             executor.map(func, args)
 
-    def run(self, testing=False) -> None:
+    def run(self, is_testing=False) -> None:
         """Run the program"""
         self.parse_args()
-        if testing:
+        if is_testing:
             logging.basicConfig(level=logging.INFO)
             # self.path = os.path.dirname(os.path.abspath(__file__))
         start_time = time.time()
