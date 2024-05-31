@@ -26,7 +26,54 @@ from bs4 import BeautifulSoup
 
 
 @dataclass
-class PttImageCrawler:
+class BaseCrawler:
+    """Crawl from any source."""
+    download_count: int = 0
+    path: str = '.'
+    directory_name: str = 'Download'
+    directory_path: str = os.path.join(path, directory_name)
+    session: requests.Session = field(default_factory=requests.Session)
+
+    def __post_init__(self) -> None:
+        self.session.cookies.set('over18', '1')
+        self.session.timeout = 5
+        self.session.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+            AppleWebKit/537.36 (KHTML, like Gecko) \
+            Chrome/58.0.3029.110 Safari/537.3'
+        }
+
+    def download(self, url: str, file_name: str = None) -> None:
+        """Download the file from the given URL and save it to the specified path."""
+        if file_name is None:
+            file_name = url.split('/')[-1]
+        file_path = os.path.join(self.directory_path, file_name)
+        try:
+            response = self.session.get(url)
+            response.raise_for_status()
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
+                requests.exceptions.RequestException) as err_:
+            logging.error("Download network error: %s", err_)
+            return
+        file_content = response.content
+        try:
+            with open(file_path, "wb") as file:
+                file.write(file_content)
+        except PermissionError:
+            logging.error("PermissionError: %s", file_path)
+            return
+        except IOError as io_err:
+            logging.error("I/O error: %s", str(io_err))
+            return
+        except Exception as err_:
+            logging.error("Save file unknown error: %s", err_)
+            return
+        self.download_count += 1
+
+
+@dataclass
+class PttImageCrawler(BaseCrawler):
     """Crawl any board from PTT and download all images from the articles."""
     PTT_URL = "https://www.ptt.cc/bbs"
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
@@ -42,16 +89,6 @@ class PttImageCrawler:
     thread_num: int = os.cpu_count()
     article_queue: queue.Queue = field(default_factory=queue.Queue)
     image_queue: queue.Queue = field(default_factory=queue.Queue)
-    session: requests.Session = field(default_factory=requests.Session)
-
-    def __post_init__(self) -> None:
-        self.session.cookies.set('over18', '1')
-        self.session.timeout = 5
-        self.session.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-            AppleWebKit/537.36 (KHTML, like Gecko) \
-            Chrome/58.0.3029.110 Safari/537.3'
-        }
 
     def parse_args(self) -> None:
         """Parse arguments from command line"""
@@ -141,34 +178,6 @@ class PttImageCrawler:
             if not img_url.endswith(".jpg"):
                 img_url = f"{img_url}.jpg"
             self.image_queue.put(img_url)
-
-    def download(self, url: str, file_name: str = None) -> None:
-        """Download file from given url"""
-        if not file_name:
-            file_name = url.split('/')[-1]
-        file_path = os.path.join(self.directory_path, file_name)
-        try:
-            response = self.session.get(url)
-            response.raise_for_status()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
-                requests.exceptions.RequestException) as err_:
-            logging.error("Download network error: %s", err_)
-            return
-        file_content = response.content
-        try:
-            with open(file_path, "wb") as file:
-                file.write(file_content)
-        except PermissionError:
-            logging.error("PermissionError: %s", file_path)
-            return
-        except IOError as io_err:
-            logging.error("I/O error: %s", str(io_err))
-            return
-        except Exception as err_:
-            logging.error("Save file unknown error: %s", err_)
-            return
-        self.download_count += 1
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads"""
