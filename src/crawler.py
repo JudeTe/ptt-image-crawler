@@ -93,7 +93,6 @@ class PttImageCrawler(BaseCrawler):
     PTT_URL = "https://www.ptt.cc/bbs"
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
 
-    download_count: int = 0
     start_page: int = 0
     end_page: int = 0
     max_page_of_board: int = 0
@@ -101,7 +100,6 @@ class PttImageCrawler(BaseCrawler):
     path: str = '.'
     directory_name: str = 'beauty'
     directory_path: str = os.path.join(path, directory_name)
-    thread_num: int = os.cpu_count()
     article_queue: queue.Queue = field(default_factory=queue.Queue)
     image_queue: queue.Queue = field(default_factory=queue.Queue)
 
