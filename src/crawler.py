@@ -46,7 +46,7 @@ class BaseCrawler(ABC):
         }
 
     @abstractmethod
-    def crawl(): ...
+    def crawl(self, is_testing=False): ...
 
     def execute_with_threads(self, func, args) -> None:
         """Run function with threads."""
