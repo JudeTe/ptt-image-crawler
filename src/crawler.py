@@ -19,6 +19,7 @@ import os
 import queue
 import re
 import time
+from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 import requests
@@ -26,7 +27,7 @@ from bs4 import BeautifulSoup
 
 
 @dataclass
-class BaseCrawler:
+class BaseCrawler(ABC):
     """Crawl from any source."""
     download_count: int = 0
     path: str = '.'
@@ -42,6 +43,9 @@ class BaseCrawler:
             AppleWebKit/537.36 (KHTML, like Gecko) \
             Chrome/58.0.3029.110 Safari/537.3'
         }
+
+    @abstractmethod
+    def crawl(): ...
 
     def download(self, url: str, file_name: str = None) -> None:
         """Download the file from the given URL and save it to the specified path."""
@@ -74,7 +78,7 @@ class BaseCrawler:
 
 @dataclass
 class PttImageCrawler(BaseCrawler):
-    """Crawl any board from PTT and download all images from the articles."""
+    """Crawl images from the given board."""
     PTT_URL = "https://www.ptt.cc/bbs"
     IMAGE_URL_PATTERN = re.compile(r"https?://(i\.|)imgur\.com/\w+(\.jpg|)")
 
@@ -184,8 +188,8 @@ class PttImageCrawler(BaseCrawler):
         with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
             executor.map(func, args)
 
-    def run(self, is_testing=False) -> None:
-        """Run the program"""
+    def crawl(self, is_testing=False) -> None:
+        """crawl PTT"""
         self.parse_args()
         if is_testing:
             logging.basicConfig(level=logging.INFO)
@@ -211,4 +215,4 @@ class PttImageCrawler(BaseCrawler):
 
 if __name__ == "__main__":
     crawler = PttImageCrawler()
-    crawler.run()
+    crawler.crawl()
