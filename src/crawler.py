@@ -77,7 +77,7 @@ class BaseCrawler(ABC):
             logging.error("I/O error: %s", str(io_err))
             return
         except Exception as err_:
-            logging.error("Save file unknown error: %s", err_)
+            logging.error("Failed to save file due to unknown error: %s", err_)
             return
         self.download_count += 1
 
