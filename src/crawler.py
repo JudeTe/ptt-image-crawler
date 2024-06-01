@@ -213,6 +213,19 @@ class PttImageCrawler(BaseCrawler):
         logging.info("Time taken: %.2f seconds.", time.time() - start_time)
 
 
-if __name__ == "__main__":
-    crawler = PttImageCrawler()
+def run_crawler(crawler: BaseCrawler) -> bool:
+    """Run the given crawler."""
+    if not isinstance(crawler, BaseCrawler):
+        return False
     crawler.crawl()
+    return True
+
+
+def main() -> None:
+    """Main function to initialize the crawler."""
+    ptt_image_crawler = PttImageCrawler()
+    run_crawler(crawler=ptt_image_crawler)
+
+
+if __name__ == "__main__":
+    main()
