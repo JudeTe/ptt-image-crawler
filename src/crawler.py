@@ -53,11 +53,8 @@ class BaseCrawler(ABC):
         with ThreadPoolExecutor(max_workers=self.thread_num) as executor:
             executor.map(func, args)
 
-    def download(self, url: str, file_name: str = None) -> None:
-        """Download the file from the given URL and save it to the specified path."""
-        if file_name is None:
-            file_name = url.split('/')[-1]
-        file_path = os.path.join(self.directory_path, file_name)
+    def get_url_response(self, url):
+        """Utility function for making HTTP requests."""
         try:
             response = self.session.get(url)
             response.raise_for_status()
@@ -65,7 +62,17 @@ class BaseCrawler(ABC):
                 requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
                 requests.exceptions.RequestException) as err_:
             logging.error("Download network error: %s", err_)
-            return
+            return None
+        return response
+
+    def download(self, url: str, file_name: str = None) -> None:
+        """Download the file from the given URL and save it to the specified path."""
+        if file_name is None:
+            file_name = url.split('/')[-1]
+        file_path = os.path.join(self.directory_path, file_name)
+        response = self.get_url_response(url)
+        if response is None:
+            return None
         file_content = response.content
         try:
             with open(file_path, "wb") as file:
@@ -140,14 +147,9 @@ class PttImageCrawler(BaseCrawler):
     def get_board_max_page(self) -> None:
         """Get the max page of the board."""
         board_index_url = f"{self.__class__.PTT_URL}/{self.board}/index.html"
-        try:
-            response = self.session.get(board_index_url)
-            response.raise_for_status()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
-                requests.exceptions.RequestException) as err_:
-            logging.error("Get board max page network error: %s", err_)
-            return
+        response = self.get_url_response(board_index_url)
+        if response is None:
+            return None
         soup = BeautifulSoup(response.text, "html.parser")
         last_page_url = soup.find_all("a", class_="btn wide")[1]["href"]
         tags = soup.find_all('a', class_="btn wide", text="上頁")
@@ -161,14 +163,9 @@ class PttImageCrawler(BaseCrawler):
         if page != 0:
             page = self.max_page_of_board - page + 1
         page_url = f"{self.__class__.PTT_URL}/{self.board}/index{page}.html"
-        try:
-            response = self.session.get(page_url)
-            response.raise_for_status()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
-                requests.exceptions.RequestException) as err_:
-            logging.error("Crawling articles network error: %s", err_)
-            return
+        response = self.get_url_response(page_url)
+        if response is None:
+            return None
         soup = BeautifulSoup(response.text, "html.parser")
         for link in soup.select("div.title a[href]"):
             article_suffix = link["href"].split("/")[-1]
@@ -177,14 +174,9 @@ class PttImageCrawler(BaseCrawler):
     def crawl_images(self, article_suffix: str) -> None:
         """Crawl img from the given articles."""
         article_url = f"{self.__class__.PTT_URL}/{self.board}/{article_suffix}"
-        try:
-            response = self.session.get(article_url)
-            response.raise_for_status()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout, requests.exceptions.TooManyRedirects,
-                requests.exceptions.RequestException) as err_:
-            logging.error("Crawling images network error: %s", err_)
-            return
+        response = self.get_url_response(article_url)
+        if response is None:
+            return None
         soup = BeautifulSoup(response.text, "html.parser")
         for link_html in soup.find_all("a", {"href": self.__class__.IMAGE_URL_PATTERN}):
             img_url = link_html.text
